@@ -4,6 +4,7 @@ ToDoList
 
 # Project specific imports
 from beanie import Document
+from pydantic import BaseModel
 
 # Local imports
 from .todoitem import ToDoItem
@@ -27,3 +28,9 @@ class ToDoList(Document):
                 ]
             }
         }
+
+class UpdateToDoList(BaseModel):
+    name: str
+
+class UpdateToDoListItems(BaseModel):
+    items: list[ToDoItem]

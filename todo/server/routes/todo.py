@@ -3,14 +3,15 @@ Routes for ToDo List
 """
 
 # Builtin imports
-from typing import List
+from typing import List, Optional, Union
 
 # Project specific imports
 from fastapi import APIRouter, status, HTTPException
+from fastapi.encoders import jsonable_encoder
 from beanie import PydanticObjectId
 
 # Local imports
-from ..models.todolist import ToDoList
+from ..models.todolist import ToDoList, UpdateToDoList, UpdateToDoListItems
 from ..models.todoitem import ToDoItem
 
 #-----------------------------------------------------------------------------#
@@ -28,6 +29,11 @@ async def get_todolist_by_id(id: PydanticObjectId) -> ToDoList:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail=f"TodoList with {id} not found")
     return todolist
+
+def encode_input(data) -> dict[str, Optional[Union[str, List[ToDoItem]]]]:
+    data = jsonable_encoder(data)
+    data = {k: v for k, v in data.items() if v is not None}
+    return data
 
 #-----------------------------------------------------------------------------#
 # Routes
@@ -48,6 +54,13 @@ async def get_todolist(id: PydanticObjectId) -> ToDoList:
     todolist = await get_todolist_by_id(id)
     return todolist
 
+@router.put("/{id}", response_model=ToDoList)
+async def update_todolist(id: PydanticObjectId, data_to_update: UpdateToDoList) -> ToDoList:
+    todolist = await get_todolist_by_id(id)
+    _ = await todolist.update({"$set": data_to_update})
+    updated_list = await get_todolist_by_id(id)
+    return updated_list
+
 @router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_todolist(id: PydanticObjectId):
     todolist = await get_todolist_by_id(id)
@@ -55,23 +68,19 @@ async def delete_todolist(id: PydanticObjectId):
     return {"message": "TodoList deleted successfully"}
 
 #-----------------------------------------------------------------------------#
-# Routes - Item
+# Routes - Items
 #-----------------------------------------------------------------------------#
 
-@router.post("/{id}/item", response_model=ToDoList)
+@router.post("/{id}/items", response_model=ToDoList)
 async def add_todoitem(id: PydanticObjectId, todoitem: ToDoItem) -> ToDoList:
     todolist = await get_todolist_by_id(id)
     _ = await todolist.update({"$push": {"items": todoitem}})
-    updated_list = await todolist.get(id)
+    updated_list = await get_todolist_by_id(id)
     return updated_list
 
-"""
-Update the name of the todolist
-
-Get todolist
-    only return undone item
-
-Add an item
-Set an item to done
-Remove an item
-"""
+@router.put("/{id}/items", response_model=ToDoList)
+async def update_items(id: PydanticObjectId, data_to_update: UpdateToDoListItems) -> ToDoList:
+    todolist = await get_todolist_by_id(id)
+    _ = await todolist.update({"$set": data_to_update})
+    updated_list = await get_todolist_by_id(id)
+    return updated_list
