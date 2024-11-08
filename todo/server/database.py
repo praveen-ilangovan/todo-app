@@ -25,7 +25,7 @@ class ToDoDb:
         self.__client = AsyncIOMotorClient(url)
 
         await init_beanie(
-            database=self.__client.get_database("todoDb"),
+            database=self.__client.get_database( os.getenv("DB_NAME", "todoDb") ),
             document_models=[ToDoList]
         )
 
