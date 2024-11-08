@@ -11,6 +11,7 @@ from beanie import PydanticObjectId
 
 # Local imports
 from ..models.todolist import ToDoList
+from ..models.todoitem import ToDoItem
 
 #-----------------------------------------------------------------------------#
 # Router
@@ -53,3 +54,24 @@ async def delete_todolist(id: PydanticObjectId):
     await todolist.delete()
     return {"message": "TodoList deleted successfully"}
 
+#-----------------------------------------------------------------------------#
+# Routes - Item
+#-----------------------------------------------------------------------------#
+
+@router.post("/{id}/item", response_model=ToDoList)
+async def add_todoitem(id: PydanticObjectId, todoitem: ToDoItem) -> ToDoList:
+    todolist = await get_todolist_by_id(id)
+    _ = await todolist.update({"$push": {"items": todoitem}})
+    updated_list = await todolist.get(id)
+    return updated_list
+
+"""
+Update the name of the todolist
+
+Get todolist
+    only return undone item
+
+Add an item
+Set an item to done
+Remove an item
+"""
