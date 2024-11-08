@@ -2,14 +2,33 @@
 Todo Application
 """
 
+# Builtin imports
+from contextlib import asynccontextmanager
+
 # Project specific imports
 from fastapi import FastAPI
+
+# Local imports
+from .database import ToDoDb
 
 #-----------------------------------------------------------------------------#
 # App
 #-----------------------------------------------------------------------------#
 
-app = FastAPI()
+# Lifespan
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Connect to the database
+    db = ToDoDb()
+    await db.connect()
+
+    yield
+
+    # Shutdown
+    db.shutdown()
+
+
+app = FastAPI(lifespan=lifespan)
 
 #-----------------------------------------------------------------------------#
 # Routes
