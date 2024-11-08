@@ -10,6 +10,7 @@ from fastapi import FastAPI
 
 # Local imports
 from .database import ToDoDb
+from .routes.todo import router as ToDoRouter
 
 #-----------------------------------------------------------------------------#
 # App
@@ -29,6 +30,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
+app.include_router(ToDoRouter, tags=["Todos"], prefix="/todos")
 
 #-----------------------------------------------------------------------------#
 # Routes
